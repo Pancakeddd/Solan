@@ -22,6 +22,19 @@ TypeDescription* Environment::getTypeOfVariable(std::string name)
 	return nullptr;
 }
 
+bool Environment::getTypeStrict(TypeDescription** otype, std::string name)
+{
+	auto ty = types.get(name);
+	
+	if (ty != nullptr)
+	{
+		*otype = ty;
+		return true;
+	}
+
+	return false;
+}
+
 void Environment::throwError(int row, int column, std::string info)
 {
 	printf("%d, %d: Error: %s", row, column, info.c_str());

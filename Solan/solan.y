@@ -26,6 +26,8 @@ void yyerror(AstBlock **s, const char *str);
   }
 
   #define CreateAstL(T, F, L) CreateAst<T>({F, L})
+
+  
 }
 
 %union
@@ -74,7 +76,7 @@ void yyerror(AstBlock **s, const char *str);
 		$$->as<AstBlock>()->contained.push_front($1);
 	  }
 	  | statement {
-	    $$ = CreateAstL(AstBlock, @$.first_line, @$.first_column);
+	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
 	    $$->as<AstBlock>()->contained.push_back($1);
 	  }
 	  ;
@@ -88,7 +90,7 @@ void yyerror(AstBlock **s, const char *str);
 	statement_let: 
 	  SOLAN_LET identifier SOLAN_COLON identifier SOLAN_EQL value
 	    {
-		    auto ast = CreateAstL(AstSet, @$.first_line, @$.first_column);
+		    auto ast = CreateAstL(AstSet, @1.first_line, @1.first_column);
 			ast->l = $2;
 			ast->r = $6;
 			ast->specified_type = $4;
@@ -96,7 +98,7 @@ void yyerror(AstBlock **s, const char *str);
 	    }
 	  | SOLAN_LET identifier SOLAN_EQL value
 		{
-			auto ast = CreateAstL(AstSet, @$.first_line, @$.first_column);
+			auto ast = CreateAstL(AstSet, @1.first_line, @1.first_column);
 			ast->l = $2;
 			ast->r = $4;
 			ast->specified_type = std::nullopt;
@@ -120,7 +122,7 @@ void yyerror(AstBlock **s, const char *str);
 	expr_bi_operator:
 	  value operator value 
 	  {
-		auto ast = CreateAstL(AstOperator, @$.first_line, @$.first_column);
+		auto ast = CreateAstL(AstOperator, @1.first_line, @1.first_column);
 		ast->l = $1;
 		ast->optype = $2;
 		ast->r = $3;
@@ -138,7 +140,7 @@ void yyerror(AstBlock **s, const char *str);
 	identifier:
 	  SOLAN_WORD
 	  {
-		auto ast = CreateAstL(AstIdentifier, @$.first_line, @$.first_column);
+		auto ast = CreateAstL(AstIdentifier, @1.first_line, @1.first_column);
 		ast->identifier = std::string($1);
 		$$ = ast;
 	  }
@@ -147,7 +149,7 @@ void yyerror(AstBlock **s, const char *str);
 	number:
 		SOLAN_NUMBER
 		{
-			auto ast = CreateAstL(AstNumber, @$.first_line, @$.first_column);
+			auto ast = CreateAstL(AstNumber, @1.first_line, @1.first_column);
 			ast->num = $1;
 			$$ = ast;
 		}

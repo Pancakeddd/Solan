@@ -1,4 +1,7 @@
 #include "transform.h"
+#include "types.h"
+
+#include <format>
 
 bool discoverTypes(Ast* ast, Environment& env)
 {
@@ -20,10 +23,23 @@ bool discoverTypes(Ast* ast, Environment& env)
 
 		case AstType::ASTSET:
 		{
-			auto right_hand_type = ast->as<AstSet>()->r->type;
-			ast->type = right_hand_type;
+			auto set = ast->as<AstSet>();
+			if (set->isSpecified())
+			{
+				auto type_name = set->specified_type.value()
+					->as<AstIdentifier>()
+					->identifier;
 
-			set_UpdateVariable(ast->as<AstSet>(), env);
+				if (!env.getTypeStrict(&set->type, type_name)) // If the type doesn't exist.
+				{
+					env.throwError(set->location.line_i, set->location.char_i, std::format("unknown type '{}'", type_name));
+				}
+
+				if (!typecheckSet(set)) // Failed check;
+				{
+					env.throwError(set->location.line_i, set->location.char_i, std::format("typecheck mismatch between '{}' and right hand side.", type_name));
+				}
+			}
 		}
 	}
 	
@@ -35,4 +51,16 @@ void set_UpdateVariable(AstSet* set, Environment& env)
 {
 	auto variable_name = set->l->as<AstIdentifier>()->identifier;
 	env.makeVariable(variable_name, set->type);
+}
+
+bool transform(Ast* ast, Environment& env)
+{
+	discoverTypes(ast, env);
+
+	if (ast->getAstType() == AstType::ASTSET)
+	{
+		set_UpdateVariable(ast->as<AstSet>(), env);
+	}
+
+	return true;
 }

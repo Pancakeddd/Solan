@@ -35,7 +35,7 @@ int main()
   e.makeUnaryType("Null");
   e.makeUnaryType("Number");
 
-  program->touch(discoverTypes, e);
+  program->touch(transform, e);
 	
 	return 0;
 }

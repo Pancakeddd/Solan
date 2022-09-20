@@ -12,6 +12,10 @@ struct Description
 
 	T* get(std::string name)
 	{
+		/* 
+			Try to find this index in our description, if we don't have this then we will search our parent description for it. 
+		*/
+
 		if (sub_descriptions.find(name) != sub_descriptions.end())
 		{
 			return sub_descriptions[name].get(); // We have this index.

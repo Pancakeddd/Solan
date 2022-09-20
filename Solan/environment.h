@@ -2,7 +2,6 @@
 
 #include <string>
 
-
 #include "description.h"
 
 struct Environment
@@ -15,6 +14,7 @@ struct Environment
 	Variable* makeVariable(std::string name, TypeDescription* type);
 
 	TypeDescription* getTypeOfVariable(std::string name);
+	bool getTypeStrict(TypeDescription** otype, std::string name);
 
 	void throwError(int row, int column, std::string info);
 };
