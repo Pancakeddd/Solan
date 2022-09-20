@@ -1,5 +1,7 @@
 #include "environment.h"
 
+#include <stdio.h>
+
 Environment Environment::createSubScope()
 {
 	Environment e;
