@@ -4,6 +4,8 @@
 
 #include "description.h"
 
+struct Ast;
+
 struct Environment
 {
 	TypeDescription types;
@@ -17,4 +19,5 @@ struct Environment
 	bool getTypeStrict(TypeDescription** otype, std::string name);
 
 	void throwError(int row, int column, std::string info);
+	void throwError(Ast *ast, std::string info);
 };

@@ -21,6 +21,7 @@ enum AstType
 	ASTSET,
 	ASTOPERATION,
 	ASTBLOCK,
+	ASTFUNCTIONDEF,
 
 	// TRANSFORM LEVEL
 	TRANSFORMSET
@@ -31,6 +32,12 @@ struct Location
 	int line_i = -1;
 	int char_i = -1;
 };
+
+/* Ast Structure:
+* 
+* Base ast information needed, the source code location where this was parsed in the code and an optional "type" like Number or String.
+* 
+*/
 
 struct Ast
 {
@@ -79,6 +86,11 @@ struct AstNumber : AstImpl<AstNumber>
 	double num;
 };
 
+struct AstNull : AstImpl<AstNull>
+{
+	static const AstType s_type = AstType::ASTNULL;
+};
+
 template <typename T>
 struct OperatorImpl : AstImpl<T>
 {
@@ -109,6 +121,21 @@ struct AstOperator : OperatorImpl<AstOperator>
 	static const AstType s_type = AstType::ASTOPERATION;
 
 	Operator optype;
+};
+
+struct AstFunction : AstImpl<AstFunction>
+{
+	static const AstType s_type = AstType::ASTFUNCTIONDEF;
+
+	void touch(std::function<bool(Ast*, Environment&)> f, Environment& e)
+	{
+		code->touch(f, e);
+
+		f(this, e);
+	};
+
+	SubAst arguments;
+	SubAst code;
 };
 
 struct AstBlock : AstImpl<AstBlock>

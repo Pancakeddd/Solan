@@ -28,10 +28,16 @@
 "+"				{return SOLAN_ADD;}
 "-"				{return SOLAN_SUB;}
 "*"				{return SOLAN_MUL;}
-"/"				{return SOLAN_DIV;}
+"/"             {return SOLAN_DIV;}
 
-"let"			{return SOLAN_LET;}
 ":"				{return SOLAN_COLON;}
+","             {return SOLAN_COMMA;}
+
+"let"           {return SOLAN_LET;}
+"null"          {return SOLAN_NULL;}
+"function"      {return SOLAN_FUNCTION;}
+"return"        {return SOLAN_RETURN;}
+"end"           {return SOLAN_END;}
 
 [a-zA-Z][_a-zA-Z0-9]*		{
 	yylval.text = _strdup(yytext);

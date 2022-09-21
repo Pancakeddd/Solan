@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include "ast.h"
+
 Environment Environment::createSubScope()
 {
 	Environment e;
@@ -38,6 +40,11 @@ bool Environment::getTypeStrict(TypeDescription** otype, std::string name)
 void Environment::throwError(int row, int column, std::string info)
 {
 	printf("%d, %d: Error: %s", row, column, info.c_str());
+}
+
+void Environment::throwError(Ast *ast, std::string info)
+{
+	throwError(ast->location.line_i, ast->location.char_i, info);
 }
 
 TypeDescription* Environment::makeUnaryType(std::string name)

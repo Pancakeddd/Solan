@@ -18,6 +18,7 @@ int main()
   if (!pt)
   {
     printf("Failed to open file\n");
+
     return -1;
   }
 
@@ -25,6 +26,8 @@ int main()
   
 
 	yyparse(&program);
+
+  fclose(pt);
 
   if (program == nullptr)
   {
@@ -34,6 +37,7 @@ int main()
   Environment e;
   e.makeUnaryType("Null");
   e.makeUnaryType("Number");
+  e.makeVariable("test_var", e.types.get("Null"));
 
   program->touch(transform, e);
 	

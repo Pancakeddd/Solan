@@ -46,7 +46,7 @@ void yyerror(AstBlock **s, const char *str);
 %error-verbose
 
 %token<op> SOLAN_EQL SOLAN_ADD SOLAN_SUB SOLAN_MUL SOLAN_DIV
-%token SOLAN_LET SOLAN_COLON
+%token SOLAN_LET SOLAN_COLON SOLAN_NULL SOLAN_FUNCTION SOLAN_COMMA SOLAN_END SOLAN_RETURN
 
 %token <text> SOLAN_WORD
 %token <num> SOLAN_NUMBER
@@ -55,7 +55,10 @@ void yyerror(AstBlock **s, const char *str);
 %left SOLAN_ADD SOLAN_SUB
 %left SOLAN_MUL SOLAN_DIV
 
-%type<asttype> statement statement_let identifier number block value expr expr_bi_operator
+%type<asttype> statement statement_let statement_function_def
+	identifier number null 
+	block identifier_list 
+	value expr expr_bi_operator
 %type<program> program
 %type<op> operator
 
@@ -64,7 +67,7 @@ void yyerror(AstBlock **s, const char *str);
 %%
 	solan: program
 
-	// Blocks and Program constructs
+	// Blocks, List and Program constructs
 
 	program:
 	  block { *result = $1->as<AstBlock>(); }
@@ -79,12 +82,29 @@ void yyerror(AstBlock **s, const char *str);
 	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
 	    $$->as<AstBlock>()->contained.push_back($1);
 	  }
+	  | {
+	    $$ = CreateAstL(AstBlock, @0.first_line, @0.first_column);
+	    
+	  }
 	  ;
+
+	identifier_list:
+	  identifier identifier_list
+	    {
+		$$ = $2;
+		$$->as<AstBlock>()->contained.push_front($1);
+	    }
+	  | identifier
+	    {
+	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
+	    $$->as<AstBlock>()->contained.push_back($1);
+	    }
 
 	// Statements 
 
 	statement: 
 	  statement_let
+	  | statement_function_def
 	  ;
 
 	statement_let: 
@@ -102,6 +122,16 @@ void yyerror(AstBlock **s, const char *str);
 			ast->l = $2;
 			ast->r = $4;
 			ast->specified_type = std::nullopt;
+			$$ = ast;
+		}
+	  ;
+
+	statement_function_def:
+	  SOLAN_LET identifier identifier_list SOLAN_EQL block SOLAN_END
+	    {
+			auto ast = CreateAstL(AstFunction, @1.first_line, @1.first_column);
+			ast->arguments = $3;
+			ast->code = $5;
 			$$ = ast;
 		}
 	  ;
@@ -134,8 +164,15 @@ void yyerror(AstBlock **s, const char *str);
 	  identifier
 	  | number
 	  | expr
+	  | null
 	  | '(' value ')' {$$ = $2;}
 	  ;
+
+	null:
+	  SOLAN_NULL
+	  {
+	    $$ = CreateAstL(AstNull, @1.first_line, @1.first_column);
+	  }
 	
 	identifier:
 	  SOLAN_WORD

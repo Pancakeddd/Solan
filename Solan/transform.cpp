@@ -21,6 +21,12 @@ bool discoverTypes(Ast* ast, Environment& env)
 			break;
 		}
 
+		case AstType::ASTNULL:
+		{
+			ast->type = env.types.get("Null");
+			break;
+		}
+
 		case AstType::ASTSET:
 		{
 			auto set = ast->as<AstSet>();
@@ -32,15 +38,29 @@ bool discoverTypes(Ast* ast, Environment& env)
 
 				if (!env.getTypeStrict(&set->type, type_name)) // If the type doesn't exist.
 				{
-					env.throwError(set->location.line_i, set->location.char_i, std::format("unknown type '{}'", type_name));
+					env.throwError(set, std::format("unknown type '{}'.", type_name));
 				}
 
 				if (!typecheckSet(set)) // Failed check;
 				{
-					env.throwError(set->location.line_i, set->location.char_i, std::format("typecheck mismatch between '{}' and right hand side.", type_name));
+					env.throwError(set, std::format("typecheck mismatch between '{}' and right hand side.", type_name));
 				}
 			}
+			break;
 		}
+
+		case AstType::ASTOPERATION:
+		{
+			auto op = ast->as<AstOperator>();
+
+			if (!typecheckOp(op))
+			{
+				env.throwError(op, "type mismatch between Lhs and Rhs.");
+			}
+
+			op->type = op->l->type;
+		}
+		break;
 	}
 	
 

@@ -9,3 +9,8 @@ bool typecheckSet(AstSet* set)
 
 	return set->type == set->r->type;
 }
+
+bool typecheckOp(AstOperator* op)
+{
+	return op->l->type == op->r->type;
+}
