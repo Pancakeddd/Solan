@@ -55,7 +55,7 @@ void yyerror(AstBlock **s, const char *str);
 %left SOLAN_ADD SOLAN_SUB
 %left SOLAN_MUL SOLAN_DIV
 
-%type<asttype> statement statement_let statement_function_def
+%type<asttype> statement statement_let statement_function_def statement_return
 	identifier number null 
 	block identifier_list 
 	value expr expr_bi_operator
@@ -105,6 +105,7 @@ void yyerror(AstBlock **s, const char *str);
 	statement: 
 	  statement_let
 	  | statement_function_def
+	  | statement_return
 	  ;
 
 	statement_let: 
@@ -130,10 +131,20 @@ void yyerror(AstBlock **s, const char *str);
 	  SOLAN_LET identifier identifier_list SOLAN_EQL block SOLAN_END
 	    {
 			auto ast = CreateAstL(AstFunction, @1.first_line, @1.first_column);
+			ast->name = $2;
 			ast->arguments = $3;
 			ast->code = $5;
 			$$ = ast;
 		}
+	  ;
+
+	statement_return:
+	  SOLAN_RETURN value
+	    {
+			auto ast = CreateAstL(AstReturn, @1.first_line, @1.first_column);
+			ast->returnvalue = $2;
+			$$ = ast;
+	    }
 	  ;
 
 	// Values/Expressions

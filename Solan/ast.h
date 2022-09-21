@@ -22,6 +22,7 @@ enum AstType
 	ASTOPERATION,
 	ASTBLOCK,
 	ASTFUNCTIONDEF,
+	ASTRETURN,
 
 	// TRANSFORM LEVEL
 	TRANSFORMSET
@@ -113,6 +114,13 @@ struct AstSet : OperatorImpl<AstSet>
 
 	std::optional<SubAst> specified_type;
 
+	void touch(std::function<bool(Ast*, Environment&)> f, Environment& e)
+	{
+		r->touch(f, e);
+
+		f(this, e);
+	};
+
 	constexpr bool isSpecified() const { return specified_type.has_value(); }
 };
 
@@ -129,13 +137,31 @@ struct AstFunction : AstImpl<AstFunction>
 
 	void touch(std::function<bool(Ast*, Environment&)> f, Environment& e)
 	{
-		code->touch(f, e);
+		auto sub_scope = e.createSubScope();
+		code->touch(f, sub_scope);
 
 		f(this, e);
 	};
 
+	SubAst name;
 	SubAst arguments;
 	SubAst code;
+
+	TypeDescription* return_type = nullptr;
+};
+
+struct AstReturn : AstImpl<AstReturn>
+{
+	static const AstType s_type = AstType::ASTRETURN;
+
+	void touch(std::function<bool(Ast*, Environment&)> f, Environment& e)
+	{
+		returnvalue->touch(f, e);
+
+		f(this, e);
+	};
+
+	SubAst returnvalue;
 };
 
 struct AstBlock : AstImpl<AstBlock>

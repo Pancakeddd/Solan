@@ -37,9 +37,22 @@ bool Environment::getTypeStrict(TypeDescription** otype, std::string name)
 	return false;
 }
 
+bool Environment::getVariableStrict(Variable** ovariable, std::string name)
+{
+	auto ty = vars.get(name);
+
+	if (ty != nullptr)
+	{
+		*ovariable = ty;
+		return true;
+	}
+
+	return false;
+}
+
 void Environment::throwError(int row, int column, std::string info)
 {
-	printf("%d, %d: Error: %s", row, column, info.c_str());
+	printf("%d, %d: Error: %s\n", row, column, info.c_str());
 }
 
 void Environment::throwError(Ast *ast, std::string info)
@@ -49,14 +62,20 @@ void Environment::throwError(Ast *ast, std::string info)
 
 TypeDescription* Environment::makeUnaryType(std::string name)
 {
-	return (types.sub_descriptions[name] = std::make_unique<TypeDescription>()).get(); // Creates a unique PTR type description then returns raw PTR.
+	return types.make(name); // Creates a unique PTR type description then returns raw PTR.
+}
+
+TypeDescription* Environment::makeFunctionType(std::string name, TypeDescription* return_type)
+{
+	auto type = types.make(name);
+	type->inherit("return_function", return_type);
+	return type;
 }
 
 Variable* Environment::makeVariable(std::string name, TypeDescription* type)
 {
 	// Creates variable with TypeDescription "type" and returns raw PTR.
-
-	auto variable = (vars.sub_descriptions[name] = std::make_unique<Variable>()).get();
+	auto variable = vars.make(name);
 	variable->type = type;
 	return variable;
 }

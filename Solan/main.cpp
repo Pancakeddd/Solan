@@ -35,6 +35,7 @@ int main()
   }
 
   Environment e;
+
   e.makeUnaryType("Null");
   e.makeUnaryType("Number");
   e.makeVariable("test_var", e.types.get("Null"));

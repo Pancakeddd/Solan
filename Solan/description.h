@@ -8,7 +8,7 @@ struct Description
 {
 	Description<T>* parent_description = nullptr;
 
-	std::map<std::string, std::unique_ptr<T>> sub_descriptions;
+	std::map<std::string, std::shared_ptr<T>> sub_descriptions;
 
 	T* get(std::string name)
 	{
@@ -26,6 +26,16 @@ struct Description
 		}
 
 		return nullptr; // Not found!
+	}
+
+	T* make(std::string name)
+	{
+		return (sub_descriptions[name] = std::make_shared<T>()).get();
+	}
+
+	T* inherit(std::string name, T* ptr)
+	{
+		return (sub_descriptions[name] = std::shared_ptr<T>(ptr)).get();
 	}
 };
 

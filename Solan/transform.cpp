@@ -17,7 +17,15 @@ bool discoverTypes(Ast* ast, Environment& env)
 		case AstType::IDENTIFIER:
 		{
 			auto identifier_string = ast->as<AstIdentifier>()->identifier;
-			ast->type = env.getTypeOfVariable(identifier_string);
+
+			Variable* v;
+			if (env.getVariableStrict(&v, identifier_string))
+			{
+				ast->type = v->type;
+			}
+			else {
+				env.throwError(ast, std::format("unknown variable '{}'", identifier_string));
+			}
 			break;
 		}
 
@@ -46,6 +54,9 @@ bool discoverTypes(Ast* ast, Environment& env)
 					env.throwError(set, std::format("typecheck mismatch between '{}' and right hand side.", type_name));
 				}
 			}
+			else {
+				set->type = set->r->type;
+			}
 			break;
 		}
 
@@ -59,8 +70,34 @@ bool discoverTypes(Ast* ast, Environment& env)
 			}
 
 			op->type = op->l->type;
+			break;
 		}
-		break;
+
+		case AstType::ASTRETURN:
+		{
+			ast->type = ast->as<AstReturn>()->returnvalue->type;
+			break;
+		}
+
+		case AstType::ASTFUNCTIONDEF:
+		{
+			auto func = ast->as<AstFunction>();
+			
+			// Find return, if there is no return then the func's return type will be "Null"
+
+			func->return_type = env.types.get("Null");
+
+			for (auto sub_a : func->code->as<AstBlock>()->contained)
+			{
+				if (sub_a->getAstType() == ASTRETURN)
+				{
+					func->return_type = sub_a->as<AstReturn>()->type;
+					break;
+				}
+			}
+
+			break;
+		}
 	}
 	
 
@@ -73,6 +110,13 @@ void set_UpdateVariable(AstSet* set, Environment& env)
 	env.makeVariable(variable_name, set->type);
 }
 
+void function_CreateFunction(AstFunction* func, Environment& env)
+{
+	auto func_name = func->name->as<AstIdentifier>()->identifier;
+	auto ty = env.makeFunctionType(func_name, func->return_type);
+	env.makeVariable(func_name, ty);
+}
+
 bool transform(Ast* ast, Environment& env)
 {
 	discoverTypes(ast, env);
@@ -80,6 +124,11 @@ bool transform(Ast* ast, Environment& env)
 	if (ast->getAstType() == AstType::ASTSET)
 	{
 		set_UpdateVariable(ast->as<AstSet>(), env);
+	}
+
+	if (ast->getAstType() == AstType::ASTFUNCTIONDEF)
+	{
+		function_CreateFunction(ast->as<AstFunction>(), env);
 	}
 
 	return true;
