@@ -7,5 +7,6 @@
 bool discoverTypes(Ast* ast, Environment& env);
 void set_UpdateVariable(AstSet* set, Environment& env);
 void function_CreateFunction(AstFunction* func, Environment& env);
+void type_CreateType(AstTypeDefinition* type, Environment& env);
 
 bool transform(Ast* ast, Environment& env);

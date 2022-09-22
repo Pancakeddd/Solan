@@ -23,6 +23,8 @@ enum AstType
 	ASTBLOCK,
 	ASTFUNCTIONDEF,
 	ASTRETURN,
+	ASTTYPEDEF,
+	ASTSUBTYPE,
 
 	// TRANSFORM LEVEL
 	TRANSFORMSET
@@ -61,6 +63,8 @@ struct Ast
 	{
 		return dynamic_cast<T*>(this);
 	}
+
+	std::string getIdentifier();
 };
 
 template <class AstInfo>
@@ -72,6 +76,8 @@ struct AstImpl : Ast
 		return AstInfo::s_type;
 	}
 };
+
+// Values:
 
 struct AstIdentifier : AstImpl<AstIdentifier>
 {
@@ -92,6 +98,8 @@ struct AstNull : AstImpl<AstNull>
 	static const AstType s_type = AstType::ASTNULL;
 };
 
+// Operators:
+
 template <typename T>
 struct OperatorImpl : AstImpl<T>
 {
@@ -106,7 +114,6 @@ struct OperatorImpl : AstImpl<T>
 		f(this, e);
 	};
 };
-
 
 struct AstSet : OperatorImpl<AstSet>
 {
@@ -130,6 +137,8 @@ struct AstOperator : OperatorImpl<AstOperator>
 
 	Operator optype;
 };
+
+// Functions:
 
 struct AstFunction : AstImpl<AstFunction>
 {
@@ -164,6 +173,26 @@ struct AstReturn : AstImpl<AstReturn>
 	SubAst returnvalue;
 };
 
+// Types:
+
+struct AstTypeDefinition : AstImpl<AstTypeDefinition>
+{
+	static const AstType s_type = AstType::ASTTYPEDEF;
+
+	SubAst subtypes;
+	SubAst name;
+};
+
+struct AstSubTypeDefinition : AstImpl<AstSubTypeDefinition>
+{
+	static const AstType s_type = AstType::ASTSUBTYPE;
+	
+	SubAst name;
+	SubAst tyname;
+};
+
+// Misc:
+
 struct AstBlock : AstImpl<AstBlock>
 {
 	static const AstType s_type = AstType::ASTBLOCK;
@@ -180,6 +209,8 @@ struct AstBlock : AstImpl<AstBlock>
 
 	std::list<SubAst> contained;
 };
+
+
 
 template <typename T>
 std::shared_ptr<T> createAst()

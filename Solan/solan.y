@@ -46,7 +46,7 @@ void yyerror(AstBlock **s, const char *str);
 %error-verbose
 
 %token<op> SOLAN_EQL SOLAN_ADD SOLAN_SUB SOLAN_MUL SOLAN_DIV
-%token SOLAN_LET SOLAN_COLON SOLAN_NULL SOLAN_FUNCTION SOLAN_COMMA SOLAN_END SOLAN_RETURN
+%token SOLAN_LET SOLAN_COLON SOLAN_NULL SOLAN_FUNCTION SOLAN_COMMA SOLAN_END SOLAN_RETURN SOLAN_TYPE
 
 %token <text> SOLAN_WORD
 %token <num> SOLAN_NUMBER
@@ -57,7 +57,8 @@ void yyerror(AstBlock **s, const char *str);
 
 %type<asttype> statement statement_let statement_function_def statement_return
 	identifier number null 
-	block identifier_list 
+	block identifier_list line
+	definition type_definition type_block subtype_definition
 	value expr expr_bi_operator
 %type<program> program
 %type<op> operator
@@ -74,11 +75,11 @@ void yyerror(AstBlock **s, const char *str);
 	  ;
 
 	block:
-	  statement block {
+	  line block {
 		$$ = $2;
 		$$->as<AstBlock>()->contained.push_front($1);
 	  }
-	  | statement {
+	  | line {
 	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
 	    $$->as<AstBlock>()->contained.push_back($1);
 	  }
@@ -86,6 +87,12 @@ void yyerror(AstBlock **s, const char *str);
 	    $$ = CreateAstL(AstBlock, @0.first_line, @0.first_column);
 	    
 	  }
+	  ;
+
+	line: 
+	  value
+	  | statement
+	  | definition
 	  ;
 
 	identifier_list:
@@ -99,6 +106,44 @@ void yyerror(AstBlock **s, const char *str);
 	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
 	    $$->as<AstBlock>()->contained.push_back($1);
 	    }
+
+	// Definitions
+
+	subtype_definition:
+	  identifier SOLAN_COLON identifier
+	    {
+		auto ast = CreateAstL(AstSubTypeDefinition, @1.first_line, @1.first_column);
+		ast->name = $1;
+		ast->tyname = $3;
+		$$ = ast;
+	    }
+	  ;
+
+	type_block:
+	  subtype_definition type_block
+	    {
+		$$ = $2;
+		$$->as<AstBlock>()->contained.push_front($1);
+	    }
+	  | subtype_definition
+	    {
+	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
+	    $$->as<AstBlock>()->contained.push_back($1);
+	    }
+
+	definition:
+	  type_definition
+	  ;
+
+	type_definition:
+	  SOLAN_TYPE identifier type_block SOLAN_END
+	    {
+		auto ast = CreateAstL(AstTypeDefinition, @1.first_line, @1.first_column);
+		ast->name = $2;
+		ast->subtypes = $3;
+		$$ = ast;
+	    }
+	  ;
 
 	// Statements 
 

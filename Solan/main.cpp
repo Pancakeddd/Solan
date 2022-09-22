@@ -37,10 +37,10 @@ int main()
   Environment e;
 
   e.makeUnaryType("Null");
-  e.makeUnaryType("Number");
+  e.makeUnaryType("Number");  
   e.makeVariable("test_var", e.types.get("Null"));
 
   program->touch(transform, e);
 	
-	return 0;
+  return 0;
 }

@@ -16,7 +16,7 @@ bool discoverTypes(Ast* ast, Environment& env)
 
 		case AstType::IDENTIFIER:
 		{
-			auto identifier_string = ast->as<AstIdentifier>()->identifier;
+			auto identifier_string = ast->getIdentifier();
 
 			Variable* v;
 			if (env.getVariableStrict(&v, identifier_string))
@@ -106,15 +106,33 @@ bool discoverTypes(Ast* ast, Environment& env)
 
 void set_UpdateVariable(AstSet* set, Environment& env)
 {
-	auto variable_name = set->l->as<AstIdentifier>()->identifier;
+	auto variable_name = set->l->getIdentifier();
 	env.makeVariable(variable_name, set->type);
 }
 
 void function_CreateFunction(AstFunction* func, Environment& env)
 {
-	auto func_name = func->name->as<AstIdentifier>()->identifier;
+	auto func_name = func->name->getIdentifier();
 	auto ty = env.makeFunctionType(func_name, func->return_type);
 	env.makeVariable(func_name, ty);
+}
+
+void type_CreateType(AstTypeDefinition* type, Environment& env)
+{
+	auto type_name = type->name->getIdentifier();
+	auto ty = env.makeUnaryType(type_name);
+
+	for (auto subtype : type->subtypes->as<AstBlock>()->contained)
+	{
+		auto subtype_st = subtype->as<AstSubTypeDefinition>();
+		TypeDescription *subtype_found_typename;
+
+		if (env.getTypeStrict(&subtype_found_typename, subtype_st->tyname->getIdentifier()))
+		{
+
+			ty->indexes[subtype_st->name->getIdentifier()] = subtype_found_typename;
+		}
+	}
 }
 
 bool transform(Ast* ast, Environment& env)
@@ -129,6 +147,11 @@ bool transform(Ast* ast, Environment& env)
 	if (ast->getAstType() == AstType::ASTFUNCTIONDEF)
 	{
 		function_CreateFunction(ast->as<AstFunction>(), env);
+	}
+
+	if (ast->getAstType() == AstType::ASTTYPEDEF)
+	{
+		type_CreateType(ast->as<AstTypeDefinition>(), env);
 	}
 
 	return true;

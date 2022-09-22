@@ -1,6 +1,7 @@
 #include "environment.h"
 
 #include <stdio.h>
+#include <format>
 
 #include "ast.h"
 
@@ -67,8 +68,8 @@ TypeDescription* Environment::makeUnaryType(std::string name)
 
 TypeDescription* Environment::makeFunctionType(std::string name, TypeDescription* return_type)
 {
-	auto type = types.make(name);
-	type->inherit("return_function", return_type);
+	auto type = types.make(std::format("Function_{}", name));
+	type->indexes["return_type"] = return_type;
 	return type;
 }
 

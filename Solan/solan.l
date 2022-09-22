@@ -35,6 +35,7 @@
 
 "let"           {return SOLAN_LET;}
 "null"          {return SOLAN_NULL;}
+"type"          {return SOLAN_TYPE;}
 "function"      {return SOLAN_FUNCTION;}
 "return"        {return SOLAN_RETURN;}
 "end"           {return SOLAN_END;}

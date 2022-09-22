@@ -155,6 +155,7 @@
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ast.cpp" />
     <ClCompile Include="environment.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="solan.flex.cpp" />
