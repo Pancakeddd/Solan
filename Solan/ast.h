@@ -25,6 +25,7 @@ enum AstType
 	ASTRETURN,
 	ASTTYPEDEF,
 	ASTSUBTYPE,
+	ASTCONSTRUCT,
 
 	// TRANSFORM LEVEL
 	TRANSFORMSET
@@ -189,6 +190,21 @@ struct AstSubTypeDefinition : AstImpl<AstSubTypeDefinition>
 	
 	SubAst name;
 	SubAst tyname;
+};
+
+struct AstConstruct : AstImpl<AstConstruct>
+{
+	static const AstType s_type = AstType::ASTCONSTRUCT;
+
+	void touch(std::function<bool(Ast*, Environment&)> f, Environment& e)
+	{
+		args->touch(f, e);
+
+		f(this, e);
+	};
+
+	SubAst name;
+	SubAst args;
 };
 
 // Misc:

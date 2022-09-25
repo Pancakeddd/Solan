@@ -57,9 +57,9 @@ void yyerror(AstBlock **s, const char *str);
 
 %type<asttype> statement statement_let statement_function_def statement_return
 	identifier number null 
-	block identifier_list line
+	block identifier_list arguments line
 	definition type_definition type_block subtype_definition
-	value expr expr_bi_operator
+	value expr expr_bi_operator expr_type_construct
 %type<program> program
 %type<op> operator
 
@@ -106,6 +106,20 @@ void yyerror(AstBlock **s, const char *str);
 	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
 	    $$->as<AstBlock>()->contained.push_back($1);
 	    }
+
+
+	arguments:
+	  value SOLAN_COMMA arguments
+	    {
+		 $$ = $3;
+		 $$->as<AstBlock>()->contained.push_back($1);
+	    }
+	  | value 
+	   {
+	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
+	    $$->as<AstBlock>()->contained.push_back($1);
+	   }
+	   ;
 
 	// Definitions
 
@@ -203,6 +217,7 @@ void yyerror(AstBlock **s, const char *str);
 
 	expr:
 	  expr_bi_operator
+	  | expr_type_construct
 	  ;
 
 	expr_bi_operator:
@@ -212,6 +227,16 @@ void yyerror(AstBlock **s, const char *str);
 		ast->l = $1;
 		ast->optype = $2;
 		ast->r = $3;
+		$$ = ast;
+	  }
+	  ;
+
+	expr_type_construct:
+	  identifier '{' arguments '}'
+	  {
+	    auto ast = CreateAstL(AstConstruct, @1.first_line, @1.first_column);
+		ast->name = $1;
+		ast->args = $3;
 		$$ = ast;
 	  }
 	  ;

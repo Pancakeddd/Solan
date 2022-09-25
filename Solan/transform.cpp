@@ -98,6 +98,24 @@ bool discoverTypes(Ast* ast, Environment& env)
 
 			break;
 		}
+
+		case AstType::ASTCONSTRUCT:
+		{
+			auto construct = ast->as<AstConstruct>();
+
+			auto type_name = construct->name->getIdentifier();
+			TypeDescription* ty;
+
+			if (env.getTypeStrict(&ty, type_name)) // Found type
+			{
+				construct->type = ty;
+			}
+			else {
+				env.throwError(ast, std::format("unknown type '{}' to construct.", type_name));
+			}
+
+			break;
+		}
 	}
 	
 
@@ -129,8 +147,11 @@ void type_CreateType(AstTypeDefinition* type, Environment& env)
 
 		if (env.getTypeStrict(&subtype_found_typename, subtype_st->tyname->getIdentifier()))
 		{
-
 			ty->indexes[subtype_st->name->getIdentifier()] = subtype_found_typename;
+		}
+		else {
+			env.throwError(subtype_st, std::format("unknown type '{}' for type variable '{}' in '{}'", 
+				subtype_st->tyname->getIdentifier(), subtype_st->name->getIdentifier(), type_name));
 		}
 	}
 }
