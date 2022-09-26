@@ -5,6 +5,11 @@
 
 #include "ast.h"
 
+std::string Environment::strToFunction(std::string fun_name)
+{
+	return std::format("Function_{}", fun_name);
+}
+
 Environment Environment::createSubScope()
 {
 	Environment e;
@@ -63,13 +68,28 @@ void Environment::throwError(Ast *ast, std::string info)
 
 TypeDescription* Environment::makeUnaryType(std::string name)
 {
-	return types.make(name); // Creates a unique PTR type description then returns raw PTR.
+	auto ty = types.make(name);
+	ty->addIndex("value", ty);
+	return ty; // Creates a unique PTR type description then returns raw PTR.
 }
 
-TypeDescription* Environment::makeFunctionType(std::string name, TypeDescription* return_type)
+TypeDescription* Environment::makeEmptyType(std::string name)
 {
-	auto type = types.make(std::format("Function_{}", name));
+	return types.make(name);
+}
+
+TypeDescription* Environment::makeFunctionType(std::string name, TypeDescription* return_type, AstBlock* args)
+{
+	auto type = types.make(strToFunction(name));
 	type->indexes["return_type"] = return_type;
+
+	for (size_t i = 0; i < args->contained.size(); ++i)
+	{
+		auto arg = args->contained[i];
+
+		type->addIndex(std::to_string(i), arg->type);
+	}
+
 	return type;
 }
 

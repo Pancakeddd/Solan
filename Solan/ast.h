@@ -1,6 +1,6 @@
 #pragma once
 
-#include <list>
+#include <deque>
 #include <memory>
 #include <string>
 #include <functional>
@@ -21,14 +21,13 @@ enum AstType
 	ASTSET,
 	ASTOPERATION,
 	ASTBLOCK,
+	ASTFUNCTIONARGUMENT,
 	ASTFUNCTIONDEF,
+	ASTFUNCTIONCALL,
 	ASTRETURN,
 	ASTTYPEDEF,
 	ASTSUBTYPE,
 	ASTCONSTRUCT,
-
-	// TRANSFORM LEVEL
-	TRANSFORMSET
 };
 
 struct Location
@@ -66,6 +65,7 @@ struct Ast
 	}
 
 	std::string getIdentifier();
+	std::deque<SubAst> &getContained();
 };
 
 template <class AstInfo>
@@ -141,14 +141,26 @@ struct AstOperator : OperatorImpl<AstOperator>
 
 // Functions:
 
+struct AstFunctionArgument : AstImpl<AstFunctionArgument>
+{
+	static const AstType s_type = AstType::ASTFUNCTIONARGUMENT;
+
+	SubAst name;
+	SubAst tyname;
+};
+
 struct AstFunction : AstImpl<AstFunction>
 {
 	static const AstType s_type = AstType::ASTFUNCTIONDEF;
 
+	void addArgumentsToScope(Environment& env);
+
 	void touch(std::function<bool(Ast*, Environment&)> f, Environment& e)
 	{
 		auto sub_scope = e.createSubScope();
+		addArgumentsToScope(sub_scope);
 		code->touch(f, sub_scope);
+		arguments->touch(f, sub_scope);
 
 		f(this, e);
 	};
@@ -158,6 +170,21 @@ struct AstFunction : AstImpl<AstFunction>
 	SubAst code;
 
 	TypeDescription* return_type = nullptr;
+};
+
+struct AstFunctionCall : AstImpl<AstFunctionCall>
+{
+	static const AstType s_type = AstType::ASTFUNCTIONCALL;
+
+	void touch(std::function<bool(Ast*, Environment&)> f, Environment& e)
+	{
+		args->touch(f, e);
+
+		f(this, e);
+	};
+
+	SubAst name;
+	SubAst args;
 };
 
 struct AstReturn : AstImpl<AstReturn>
@@ -223,7 +250,7 @@ struct AstBlock : AstImpl<AstBlock>
 		f(this, e);
 	};
 
-	std::list<SubAst> contained;
+	std::deque<SubAst> contained;
 };
 
 

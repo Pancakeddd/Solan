@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <vector>
 
 template <typename T>
 struct Description
@@ -37,7 +38,19 @@ struct Description
 
 struct TypeDescription : Description<TypeDescription>
 {
+	void addIndex(std::string name, TypeDescription* ty)
+	{
+		indexes[name] = ty;
+		order_of_construction.push_back(name);
+	}
+
+	TypeDescription *getConstructionType(size_t i)
+	{
+		return indexes[order_of_construction.at(i)];
+	}
+
 	std::map<std::string, TypeDescription*> indexes;
+	std::vector<std::string> order_of_construction;
 };
 
 struct Variable

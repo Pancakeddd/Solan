@@ -57,9 +57,9 @@ void yyerror(AstBlock **s, const char *str);
 
 %type<asttype> statement statement_let statement_function_def statement_return
 	identifier number null 
-	block identifier_list arguments line
+	block function_arg_list arguments line
 	definition type_definition type_block subtype_definition
-	value expr expr_bi_operator expr_type_construct
+	value expr expr_bi_operator expr_type_construct expr_function_call
 %type<program> program
 %type<op> operator
 
@@ -77,11 +77,11 @@ void yyerror(AstBlock **s, const char *str);
 	block:
 	  line block {
 		$$ = $2;
-		$$->as<AstBlock>()->contained.push_front($1);
+		$$->getContained().push_front($1);
 	  }
 	  | line {
 	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
-	    $$->as<AstBlock>()->contained.push_back($1);
+	    $$->getContained().push_back($1);
 	  }
 	  | {
 	    $$ = CreateAstL(AstBlock, @0.first_line, @0.first_column);
@@ -95,16 +95,22 @@ void yyerror(AstBlock **s, const char *str);
 	  | definition
 	  ;
 
-	identifier_list:
-	  identifier identifier_list
+	function_arg_list:
+	  identifier SOLAN_COLON identifier function_arg_list
 	    {
-		$$ = $2;
-		$$->as<AstBlock>()->contained.push_front($1);
+		$$ = $4;
+		auto ast = CreateAstL(AstFunctionArgument, @1.first_line, @1.first_column);
+		ast->name = $1;
+		ast->tyname = $3;
+		$$->getContained().push_front(ast);
 	    }
-	  | identifier
+	  | identifier SOLAN_COLON identifier
 	    {
 	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
-	    $$->as<AstBlock>()->contained.push_back($1);
+		auto ast = CreateAstL(AstFunctionArgument, @1.first_line, @1.first_column);
+		ast->name = $1;
+		ast->tyname = $3;
+	    $$->getContained().push_back(ast);
 	    }
 
 
@@ -112,12 +118,12 @@ void yyerror(AstBlock **s, const char *str);
 	  value SOLAN_COMMA arguments
 	    {
 		 $$ = $3;
-		 $$->as<AstBlock>()->contained.push_back($1);
+		 $$->getContained().push_front($1);
 	    }
 	  | value 
 	   {
 	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
-	    $$->as<AstBlock>()->contained.push_back($1);
+	    $$->getContained().push_back($1);
 	   }
 	   ;
 
@@ -137,12 +143,12 @@ void yyerror(AstBlock **s, const char *str);
 	  subtype_definition type_block
 	    {
 		$$ = $2;
-		$$->as<AstBlock>()->contained.push_front($1);
+		$$->getContained().push_front($1);
 	    }
 	  | subtype_definition
 	    {
 	    $$ = CreateAstL(AstBlock, @1.first_line, @1.first_column);
-	    $$->as<AstBlock>()->contained.push_back($1);
+	    $$->getContained().push_back($1);
 	    }
 
 	definition:
@@ -187,7 +193,7 @@ void yyerror(AstBlock **s, const char *str);
 	  ;
 
 	statement_function_def:
-	  SOLAN_LET identifier identifier_list SOLAN_EQL block SOLAN_END
+	  SOLAN_LET identifier function_arg_list SOLAN_EQL block SOLAN_END
 	    {
 			auto ast = CreateAstL(AstFunction, @1.first_line, @1.first_column);
 			ast->name = $2;
@@ -218,6 +224,7 @@ void yyerror(AstBlock **s, const char *str);
 	expr:
 	  expr_bi_operator
 	  | expr_type_construct
+	  | expr_function_call
 	  ;
 
 	expr_bi_operator:
@@ -235,6 +242,16 @@ void yyerror(AstBlock **s, const char *str);
 	  identifier '{' arguments '}'
 	  {
 	    auto ast = CreateAstL(AstConstruct, @1.first_line, @1.first_column);
+		ast->name = $1;
+		ast->args = $3;
+		$$ = ast;
+	  }
+	  ;
+
+	expr_function_call:
+	  identifier '(' arguments ')'
+	  {
+	    auto ast = CreateAstL(AstFunctionCall, @1.first_line, @1.first_column);
 		ast->name = $1;
 		ast->args = $3;
 		$$ = ast;

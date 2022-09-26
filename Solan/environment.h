@@ -5,15 +5,19 @@
 #include "description.h"
 
 struct Ast;
+struct AstBlock;
 
 struct Environment
 {
 	TypeDescription types;
 	ScopeVariables vars;
 
+	std::string strToFunction(std::string fun_name);
+
 	Environment createSubScope();
 	TypeDescription* makeUnaryType(std::string name);
-	TypeDescription* makeFunctionType(std::string name, TypeDescription* return_type);
+	TypeDescription* makeEmptyType(std::string name);
+	TypeDescription* makeFunctionType(std::string name, TypeDescription* return_type, AstBlock *args);
 	Variable* makeVariable(std::string name, TypeDescription* type);
 
 	TypeDescription* getTypeOfVariable(std::string name);
